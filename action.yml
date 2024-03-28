@@ -51,3 +51,4 @@ runs:
           echo "Package version in pyproject.toml file outdated. Based on the auto-semvering option selected, the package version should be '${new_tag}'";
           exit 1;
         fi
+        echo "Package version in pyproject.toml file is up to date"
