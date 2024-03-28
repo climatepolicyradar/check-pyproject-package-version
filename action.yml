@@ -27,8 +27,14 @@ runs:
         fi
 
         package_version=$(grep -m 1 version pyproject.toml | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)
+
         new_tag="${{ steps.determine_next_tag_from_pr.outputs.new_tag }}"
         new_tag=${new_tag#v}
+        new_tag=${new_tag%-*}
+
+        current_tag="${{ steps.determine_next_tag_from_pr.outputs.current_tag }}"
+        current_tag=${current_tag#v}
+        current_tag=${current_tag%-*}
 
         if [[ -z "${package_version}" ]]; then
           echo "Package version in pyproject.toml file missing";
@@ -37,7 +43,9 @@ runs:
           echo "Could not determine next tag";
           exit 1;
         elif [[ "${new_tag}" == 'Skip' ]]; then
-          exit 0;
+          if [[ "${package_version}" != "${current_tag}" ]]; then
+            exit 1;
+          fi
         elif [[ "${package_version}" != "${new_tag}" ]]; then
           echo "Package version in pyproject.toml file outdated. Based on the auto-semvering option selected, package version should be '${new_tag}'";
           exit 1;
