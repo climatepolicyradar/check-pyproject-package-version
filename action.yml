@@ -44,9 +44,10 @@ runs:
           exit 1;
         elif [[ "${new_tag}" == 'Skip' ]]; then
           if [[ "${package_version}" != "${current_tag}" ]]; then
+            echo "Package version in pyproject.toml file outdated. Based on the current tag, the package version should be '${current_tag}'";
             exit 1;
           fi
         elif [[ "${package_version}" != "${new_tag}" ]]; then
-          echo "Package version in pyproject.toml file outdated. Based on the auto-semvering option selected, package version should be '${new_tag}'";
+          echo "Package version in pyproject.toml file outdated. Based on the auto-semvering option selected, the package version should be '${new_tag}'";
           exit 1;
         fi
