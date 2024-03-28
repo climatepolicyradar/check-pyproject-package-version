@@ -1,0 +1,44 @@
+name: "Check pyproject.toml package version"
+description: "Check pyproject.toml package version matches expected tag"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Determine new tag version from PR body
+      id: determine_next_tag_from_pr
+      uses: climatepolicyradar/get-next-tag-from-pr-body@v2
+      with:
+        pr_body: "${{ github.event.pull_request.body }}"
+        pr_number: "${{ github.event.pull_request.number }}"
+
+    - name: Next tag found?
+      shell: bash
+      run: |
+        if [[ -z "${{ steps.determine_next_tag_from_pr.outputs.new_tag }}" ]]; then
+          exit 1;
+        fi
+
+    - name: Check pyproject.toml package version matches
+      shell: bash
+      run: |
+        if [ ! -f pyproject.toml ]; then
+          echo "pyproject.toml file not found";
+          exit 1;
+        fi
+
+        package_version=$(grep -m 1 version pyproject.toml | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)
+        new_tag="${{ steps.determine_next_tag_from_pr.outputs.new_tag }}"
+        new_tag=${new_tag#v}
+
+        if [[ -z "${package_version}" ]]; then
+          echo "Package version in pyproject.toml file missing";
+          exit 1;
+        elif [[ -z "${new_tag}" ]]; then
+          echo "Could not determine next tag";
+          exit 1;
+        elif [[ "${new_tag}" == 'Skip' ]]; then
+          exit 0;
+        elif [[ "${package_version}" != "${new_tag}" ]]; then
+          echo "Package version in pyproject.toml file outdated. Based on the auto-semvering option selected, package version should be '${new_tag}'";
+          exit 1;
+        fi
